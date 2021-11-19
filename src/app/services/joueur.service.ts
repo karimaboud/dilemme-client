@@ -13,21 +13,21 @@ export class JoueurService {
   constructor(private http: HttpClient) { }
 
   createJoueur(joueur: Joueur) {
-    return this.http.post<Joueur>(this.local_server + "/addJoueur", joueur);
+    return this.http.post<Joueur>(this.server + "/addJoueur", joueur);
   }
 
 
 
   deleteJoueur(joueurId: number) {
-    return this.http.delete<Joueur>(this.local_server + "/deleteJoueur/" + joueurId);
+    return this.http.delete<Joueur>(this.server + "/deleteJoueur/" + joueurId);
   }
 
   getJoueurs() {
-    return this.http.get<Joueur[]>(this.local_server + "/joueurs");
+    return this.http.get<Joueur[]>(this.server + "/joueurs");
   }
 
   getJoueur(id: number) {
-    return this.http.get<Joueur>(this.local_server + "/joueur/" + id);
+    return this.http.get<Joueur>(this.server + "/joueur/" + id);
   }
 
 }
