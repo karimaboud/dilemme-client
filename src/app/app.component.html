@@ -1,0 +1,254 @@
+<div *ngIf="wait" class="register">
+
+  <mat-card>
+    <mat-card-title>Créer - Rejoindre un jeu</mat-card-title>
+    <mat-card-content>
+
+      <p>
+        <mat-form-field>
+          <input type="text" matInput placeholder="Pseudo" #pseudo>
+        </mat-form-field>
+      </p>
+
+      <div *ngIf="wait && creerClick">
+        <mat-spinner [diameter]="30"></mat-spinner> <br>
+        <b>En attente d'un adversaire..</b>
+        <br><br>
+      </div>
+
+
+      <button mat-raised-button color="primary" [disabled]="!pseudo.value" (click)="creerJeu(pseudo.value)">
+        Créer un jeu
+      </button> &nbsp;
+
+      <button mat-raised-button color="primary" (click)="rejoindreJeu(pseudo.value)">
+        Rejoindre un jeu
+      </button>
+
+    </mat-card-content>
+    <table *ngIf="jeux.length>0 && rejoindClick" class="jeux">
+      <thead>
+        <tr>
+          <th>id</th>
+          <th>Créateur du jeu</th>
+          <th>Adversaire</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let jeu of jeux; index as i" (click)="choisirJeu(i)">
+          <td>{{i+1}}</td>
+          <td>{{getNomJoueur(jeu.idJoueur1)}}</td>
+          <!-- PROBLEME ICI: (le getNomJoueur(i+1) )  ce n'est toujours 
+            pas le createur du jeu, faire une fonction qui a partir 
+          du tableau jeux, renvoie les createur de jeu VOIR POSTMAN!!-->
+          <td *ngIf="jeu['idJoueur2']!=0">
+            {{jeu['idJoueur2']}}
+          </td>
+          <td *ngIf="jeu['idJoueur2']===0">
+            Pas d'adversaire pour le moment...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  </mat-card>
+
+</div>
+
+<div *ngIf="wait===false" class="game">
+
+  <div class="column">
+    <br> <br> <br>
+    <h1><u>Jeu Dilèmme du prisonnier</u></h1> <br>
+    <br>
+    <h2>Tour numéro 1</h2>
+    <table class="choice frame">
+      <tr>
+        <h3>{{getTour()}}</h3>
+        <div *ngIf="wait">
+          <mat-spinner [diameter]="40"></mat-spinner> <br>
+          <p> <b>En attente du jeu de l'autre joueur...</b></p>
+        </div>
+
+      </tr>
+      <tr>
+        <button mat-raised-button color="primary" [disabled]="wait" (click)="cooperer()">
+          Cooperer
+        </button> &nbsp;
+        <button mat-raised-button color="primary" [disabled]="wait">
+          Trahir
+        </button> &nbsp;
+        <button mat-raised-button color="primary" [disabled]="wait">
+          Abandonner
+        </button>
+      </tr>
+    </table>
+
+    <br>
+    <h2>Résultat de la rencontre:</h2>
+    <h3>Karim: 25 points</h3>
+    <h3>Sherif 23 points</h3>
+    <h3>Gagnant: Karim</h3>
+
+  </div>
+
+  <div class="column">
+    <br> <br> <br>
+    <h1><u>Résultats</u></h1>
+    <table class="results frame">
+      <thead>
+        <tr>
+          <th>Numéro tour</th>
+          <th>Action Karim</th>
+          <th>Action Sherif</th>
+          <th>Gagnant</th>
+          <th>Points</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="active-row">
+          <td>1</td>
+          <td>Trahir</td>
+          <td>Cooperer</td>
+          <td>Karim</td>
+          <td>5</td>
+        </tr>
+
+
+
+        <tr class="active-row">
+          <td>3</td>
+          <td>Cooperer</td>
+          <td>Trahir</td>
+          <td>Sherif</td>
+          <td>5</td>
+        </tr>
+        <tr class="active-row">
+          <td>1</td>
+          <td>Trahir</td>
+          <td>Cooperer</td>
+          <td>Karim</td>
+          <td>5</td>
+        </tr>
+
+        <tr class="active-row">
+          <td>2</td>
+          <td>Cooperer</td>
+          <td>Cooperer</td>
+          <td>Egalité</td>
+          <td>3</td>
+        </tr>
+
+        <tr class="active-row">
+          <td>3</td>
+          <td>Cooperer</td>
+          <td>Trahir</td>
+          <td>Sherif</td>
+          <td>5</td>
+        </tr>
+        <tr class="active-row">
+          <td>1</td>
+          <td>Trahir</td>
+          <td>Cooperer</td>
+          <td>Karim</td>
+          <td>5</td>
+        </tr>
+
+        <tr class="active-row">
+          <td>2</td>
+          <td>Cooperer</td>
+          <td>Cooperer</td>
+          <td>Egalité</td>
+          <td>3</td>
+        </tr>
+
+        <tr class="active-row">
+          <td>3</td>
+          <td>Cooperer</td>
+          <td>Trahir</td>
+          <td>Sherif</td>
+          <td>5</td>
+        </tr>
+        <tr class="active-row">
+          <td>1</td>
+          <td>Trahir</td>
+          <td>Cooperer</td>
+          <td>Karim</td>
+          <td>5</td>
+        </tr>
+
+        <tr class="active-row">
+          <td>2</td>
+          <td>Cooperer</td>
+          <td>Cooperer</td>
+          <td>Egalité</td>
+          <td>3</td>
+        </tr>
+
+        <tr class="active-row">
+          <td>3</td>
+          <td>Cooperer</td>
+          <td>Trahir</td>
+          <td>Sherif</td>
+          <td>5</td>
+        </tr>
+        <tr class="active-row">
+          <td>1</td>
+          <td>Trahir</td>
+          <td>Cooperer</td>
+          <td>Karim</td>
+          <td>5</td>
+        </tr>
+
+        <tr class="active-row">
+          <td>2</td>
+          <td>Cooperer</td>
+          <td>Cooperer</td>
+          <td>Egalité</td>
+          <td>3</td>
+        </tr>
+
+        <tr class="active-row">
+          <td>3</td>
+          <td>Cooperer</td>
+          <td>Trahir</td>
+          <td>Sherif</td>
+          <td>5</td>
+        </tr>
+        <tr class="active-row">
+          <td>1</td>
+          <td>Trahir</td>
+          <td>Cooperer</td>
+          <td>Karim</td>
+          <td>5</td>
+        </tr>
+
+        <tr class="active-row">
+          <td>2</td>
+          <td>Cooperer</td>
+          <td>Cooperer</td>
+          <td>Egalité</td>
+          <td>3</td>
+        </tr>
+
+        <tr class="active-row">
+          <td>3</td>
+          <td>Cooperer</td>
+          <td>Trahir</td>
+          <td>Sherif</td>
+          <td>5</td>
+        </tr>
+
+      </tbody>
+    </table>
+
+
+  </div>
+
+
+
+
+
+
+
+</div>

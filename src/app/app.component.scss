@@ -1,0 +1,77 @@
+.register{
+  width: 100vw;
+  height: 100vh;
+  background-color: rgb(47,61,96);
+}
+
+ 
+
+mat-card{
+  width: 25%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: center;
+}
+
+mat-spinner{
+  position: relative;
+  top:25%;
+  left: 50%;
+  transform: translateX(-50%);
+ 
+}
+
+.frame{
+  border: 2px solid black;
+  text-align: center;
+  padding: 10px;
+}
+
+ 
+.column{
+  width: 50%;
+  border: 1px solid black;
+  overflow-y: scroll;
+  position: relative;
+}
+
+table{
+  margin: 0 auto;
+}
+ 
+.game{
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  text-align: center;
+}
+
+.jeux th,
+.jeux td {
+    padding: 12px 15px;
+}
+
+.jeux thead tr {
+  background-color: #009879;
+  color: #ffffff;
+}
+
+.jeux tbody tr {
+  border-bottom: thin solid #dddddd;
+  cursor: pointer;
+}
+
+.jeux tbody tr:nth-of-type(even) {
+  background-color: #f3f3f3;
+}
+
+.jeux tbody tr:last-of-type {
+  border-bottom: 2px solid #009879;
+}
+
+.jeux tbody tr.active-row {
+  font-weight: bold;
+  color: #009879;
+}
