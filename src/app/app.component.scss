@@ -1,18 +1,27 @@
+:host{
+  margin: 0;
+  border: 0;
+}
+
 .register{
   width: 100vw;
   height: 100vh;
   background-color: rgb(47,61,96);
 }
 
- 
+mat-card-content{
+  height: auto;
+}
 
 mat-card{
-  width: 25%;
+  border-radius: 14px;
+  width: 50%;
   margin: 0 auto;
-  position: relative;
-  top: 50%;
-  transform: translateY(-50%);
   text-align: center;
+  top: 50%;
+  position: relative;
+  transform: translateY(-50%);
+  
 }
 
 mat-spinner{
@@ -54,7 +63,7 @@ table{
 }
 
 .jeux thead tr {
-  background-color: #009879;
+  background-color: rgb(63,81,181);
   color: #ffffff;
 }
 
@@ -68,10 +77,10 @@ table{
 }
 
 .jeux tbody tr:last-of-type {
-  border-bottom: 2px solid #009879;
+  border-bottom: 2px solid rgb(63,81,181);
 }
 
 .jeux tbody tr.active-row {
   font-weight: bold;
-  color: #009879;
+  color: rgb(63,81,181);
 }

@@ -14,19 +14,18 @@ export class JeuService {
   constructor(private http: HttpClient) { }
 
   getJeu(id: number) {
-    return this.http.get<Jeu>(this.server + "/jeu/" + id);
+    return this.http.get<Jeu>(this.local_server + "/jeu/" + id);
   }
 
   getJeux() {
-    return this.http.get<Jeu[]>(this.server + "/jeux");
+    return this.http.get<Jeu[]>(this.local_server + "/jeux");
   }
 
   createJeu(jeu: Jeu) {
-    return this.http.post<Jeu>(this.server + "/addJeu", jeu);
+    return this.http.post<Jeu>(this.local_server + "/addJeu", jeu);
   }
 
   updateJeu(jeu: Jeu) {
-    return this.http.put<Jeu>(this.server + "/update", jeu);
+    return this.http.put<Jeu>(this.local_server + "/updateJeu", jeu);
   }
-
 }

@@ -1,4 +1,5 @@
 import { HttpClient } from '@angular/common/http';
+import { ThrowStmt } from '@angular/compiler';
 import { Injectable } from '@angular/core';
 import { Joueur } from '../model/Joueur';
 
@@ -13,21 +14,23 @@ export class JoueurService {
   constructor(private http: HttpClient) { }
 
   createJoueur(joueur: Joueur) {
-    return this.http.post<Joueur>(this.server + "/addJoueur", joueur);
+    return this.http.post<Joueur>(this.local_server + "/addJoueur", joueur);
   }
 
-
+  updateJoueur(joueur:Joueur){
+    return this.http.put<Joueur>(this.local_server + "/updateJoueur", joueur);
+  }
 
   deleteJoueur(joueurId: number) {
-    return this.http.delete<Joueur>(this.server + "/deleteJoueur/" + joueurId);
+    return this.http.delete<Joueur>(this.local_server + "/deleteJoueur/" + joueurId);
   }
 
   getJoueurs() {
-    return this.http.get<Joueur[]>(this.server + "/joueurs");
+    return this.http.get<Joueur[]>(this.local_server + "/joueurs");
   }
 
   getJoueur(id: number) {
-    return this.http.get<Joueur>(this.server + "/joueur/" + id);
+    return this.http.get<Joueur>(this.local_server + "/joueur/" + id);
   }
 
 }

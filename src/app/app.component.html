@@ -1,14 +1,35 @@
 <div *ngIf="wait" class="register">
 
   <mat-card>
-    <mat-card-title>Créer - Rejoindre un jeu</mat-card-title>
+    <br>
+    <mat-card-title>Créer - Rejoindre</mat-card-title> <br>
     <mat-card-content>
 
-      <p>
-        <mat-form-field>
+
+      <div [hidden]="choixCreerRencontre || choixRejoindre">
+        <mat-form-field [hidden]="choixCreerRencontre">
           <input type="text" matInput placeholder="Pseudo" #pseudo>
         </mat-form-field>
-      </p>
+      </div>
+
+
+      <div class="choix" *ngIf="!choixCreerRencontre && !choixRejoindre">
+        <button (click)="choixCreerRencontre=true;" mat-raised-button color="primary">
+          Créer jeu
+        </button> &nbsp;
+        <button mat-raised-button color="primary" (click)="choixRejoindre = true; ngOnInit()">
+          Rejoindre jeu
+        </button>
+      </div>
+
+
+
+      <div *ngIf="choixCreerRencontre" class="nbTours">
+        <mat-form-field>
+          <input type="text" matInput placeholder="Nombre de tours" [(ngModel)]="nbTours">
+        </mat-form-field>
+
+      </div> <br> <br>
 
       <div *ngIf="wait && creerClick">
         <mat-spinner [diameter]="30"></mat-spinner> <br>
@@ -16,17 +37,15 @@
         <br><br>
       </div>
 
-
-      <button mat-raised-button color="primary" [disabled]="!pseudo.value" (click)="creerJeu(pseudo.value)">
+      <button mat-raised-button color="primary" [disabled]="!pseudo.value || !nbTours"
+        (click)="creerRencontre(pseudo.value, nbTours)" *ngIf="choixCreerRencontre">
         Créer un jeu
       </button> &nbsp;
 
-      <button mat-raised-button color="primary" (click)="rejoindreJeu(pseudo.value)">
-        Rejoindre un jeu
-      </button>
 
     </mat-card-content>
-    <table *ngIf="jeux.length>0 && rejoindClick" class="jeux">
+
+    <table *ngIf="rencontres && rencontres.length>0 && choixRejoindre" class="jeux">
       <thead>
         <tr>
           <th>id</th>
@@ -35,16 +54,13 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let jeu of jeux; index as i" (click)="choisirJeu(i)">
+        <tr *ngFor="let rencontre of rencontres; index as i" (click)="rejoindreRencontre(pseudo.value,i+1)">
           <td>{{i+1}}</td>
-          <td>{{getNomJoueur(jeu.idJoueur1)}}</td>
-          <!-- PROBLEME ICI: (le getNomJoueur(i+1) )  ce n'est toujours 
-            pas le createur du jeu, faire une fonction qui a partir 
-          du tableau jeux, renvoie les createur de jeu VOIR POSTMAN!!-->
-          <td *ngIf="jeu['idJoueur2']!=0">
-            {{jeu['idJoueur2']}}
+          <td>{{rencontre.joueurs[0].nom}}</td>
+          <td *ngIf="rencontre.joueurs.length === 2">
+            {{rencontre.joueurs[1].nom}}
           </td>
-          <td *ngIf="jeu['idJoueur2']===0">
+          <td *ngIf="rencontre.joueurs.length !== 2">
             Pas d'adversaire pour le moment...
           </td>
         </tr>
@@ -61,34 +77,36 @@
     <br> <br> <br>
     <h1><u>Jeu Dilèmme du prisonnier</u></h1> <br>
     <br>
-    <h2>Tour numéro 1</h2>
+
+    {{joueur1 | json}} <br>
+    {{joueur2 | json}} <br>
+
+    adversaireAChoisi : {{adversaireAChoisi}}
+
+    <br>
+
+    <!-- <div *ngIf="rencontre && rencontre.tours">
+      {{rencontre.tours | json }}
+    </div> -->
+
     <table class="choice frame">
       <tr>
         <h3>{{getTour()}}</h3>
-        <div *ngIf="wait">
-          <mat-spinner [diameter]="40"></mat-spinner> <br>
-          <p> <b>En attente du jeu de l'autre joueur...</b></p>
-        </div>
-
       </tr>
       <tr>
-        <button mat-raised-button color="primary" [disabled]="wait" (click)="cooperer()">
+        <button mat-raised-button color="primary" (click)="action('COOPERER')">
           Cooperer
         </button> &nbsp;
-        <button mat-raised-button color="primary" [disabled]="wait">
+        <button mat-raised-button color="primary" (click)="action('TRAHIR')">
           Trahir
         </button> &nbsp;
-        <button mat-raised-button color="primary" [disabled]="wait">
+        <button mat-raised-button color="primary" (click)="action('ABANDONNER')">
           Abandonner
         </button>
       </tr>
     </table>
 
     <br>
-    <h2>Résultat de la rencontre:</h2>
-    <h3>Karim: 25 points</h3>
-    <h3>Sherif 23 points</h3>
-    <h3>Gagnant: Karim</h3>
 
   </div>
 
@@ -99,156 +117,33 @@
       <thead>
         <tr>
           <th>Numéro tour</th>
-          <th>Action Karim</th>
-          <th>Action Sherif</th>
-          <th>Gagnant</th>
+          <th>Action {{joueur1.nom}}</th>
+          <th>Action {{joueur2.nom}}</th>
           <th>Points</th>
+          <th>Gagnant</th>
         </tr>
       </thead>
-      <tbody>
-        <tr class="active-row">
-          <td>1</td>
-          <td>Trahir</td>
-          <td>Cooperer</td>
-          <td>Karim</td>
-          <td>5</td>
-        </tr>
-
-
-
-        <tr class="active-row">
-          <td>3</td>
-          <td>Cooperer</td>
-          <td>Trahir</td>
-          <td>Sherif</td>
-          <td>5</td>
-        </tr>
-        <tr class="active-row">
-          <td>1</td>
-          <td>Trahir</td>
-          <td>Cooperer</td>
-          <td>Karim</td>
-          <td>5</td>
-        </tr>
-
-        <tr class="active-row">
-          <td>2</td>
-          <td>Cooperer</td>
-          <td>Cooperer</td>
-          <td>Egalité</td>
-          <td>3</td>
-        </tr>
-
-        <tr class="active-row">
-          <td>3</td>
-          <td>Cooperer</td>
-          <td>Trahir</td>
-          <td>Sherif</td>
-          <td>5</td>
-        </tr>
-        <tr class="active-row">
-          <td>1</td>
-          <td>Trahir</td>
-          <td>Cooperer</td>
-          <td>Karim</td>
-          <td>5</td>
-        </tr>
-
-        <tr class="active-row">
-          <td>2</td>
-          <td>Cooperer</td>
-          <td>Cooperer</td>
-          <td>Egalité</td>
-          <td>3</td>
-        </tr>
-
-        <tr class="active-row">
-          <td>3</td>
-          <td>Cooperer</td>
-          <td>Trahir</td>
-          <td>Sherif</td>
-          <td>5</td>
-        </tr>
-        <tr class="active-row">
-          <td>1</td>
-          <td>Trahir</td>
-          <td>Cooperer</td>
-          <td>Karim</td>
-          <td>5</td>
-        </tr>
-
-        <tr class="active-row">
-          <td>2</td>
-          <td>Cooperer</td>
-          <td>Cooperer</td>
-          <td>Egalité</td>
-          <td>3</td>
-        </tr>
-
-        <tr class="active-row">
-          <td>3</td>
-          <td>Cooperer</td>
-          <td>Trahir</td>
-          <td>Sherif</td>
-          <td>5</td>
-        </tr>
-        <tr class="active-row">
-          <td>1</td>
-          <td>Trahir</td>
-          <td>Cooperer</td>
-          <td>Karim</td>
-          <td>5</td>
-        </tr>
-
-        <tr class="active-row">
-          <td>2</td>
-          <td>Cooperer</td>
-          <td>Cooperer</td>
-          <td>Egalité</td>
-          <td>3</td>
-        </tr>
-
-        <tr class="active-row">
-          <td>3</td>
-          <td>Cooperer</td>
-          <td>Trahir</td>
-          <td>Sherif</td>
-          <td>5</td>
-        </tr>
-        <tr class="active-row">
-          <td>1</td>
-          <td>Trahir</td>
-          <td>Cooperer</td>
-          <td>Karim</td>
-          <td>5</td>
-        </tr>
-
-        <tr class="active-row">
-          <td>2</td>
-          <td>Cooperer</td>
-          <td>Cooperer</td>
-          <td>Egalité</td>
-          <td>3</td>
-        </tr>
-
-        <tr class="active-row">
-          <td>3</td>
-          <td>Cooperer</td>
-          <td>Trahir</td>
-          <td>Sherif</td>
-          <td>5</td>
+      <tbody *ngIf="rencontre && rencontre.tours">
+        <tr *ngFor="let tour of rencontre.tours">
+          <td>{{tour.id}}</td>
+          <td>{{tour.actionJoueur1}}</td>
+          <td>{{tour.actionJoueur2}}</td>
+          <td>{{tour.pointsJoueur1 }} - {{tour.pointsJoueur2}}</td>
+          <td>{{tour.pointsJoueur1 > tour.pointsJoueur2 ? joueur1.nom: joueur2.nom }}</td>
         </tr>
 
       </tbody>
     </table>
+    <br />
+
+
+    <div *ngIf="rencontre!==null && rencontre.tours!==null && rencontre.tours.length === parseInt(nbTours)">
+      <h2>Gagnant de la rencontre:</h2>
+      <h1>{{gagnant()}}</h1>
+    </div>
+
 
 
   </div>
-
-
-
-
-
-
 
 </div>

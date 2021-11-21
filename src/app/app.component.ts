@@ -1,9 +1,13 @@
-import { Component, HostListener } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Component } from '@angular/core';
+import { parse } from 'path';
 import { Jeu } from './model/Jeu';
 import { Joueur } from './model/Joueur';
+import { Rencontre } from './model/Rencontre';
+import { Tour } from './model/Tour';
 import { JeuService } from './services/jeu.service';
 import { JoueurService } from './services/joueur.service';
+import { RencontreService } from './services/rencontre.service';
+import { TourService } from './services/tour.service';
 
 @Component({
   selector: 'app-root',
@@ -13,32 +17,64 @@ import { JoueurService } from './services/joueur.service';
 export class AppComponent {
 
   wait: boolean = true;
-  joueurs: Joueur[] = [];
-  jeux: Jeu[] = [];
-  joueurId: number;
   nbConnecte: number;
-  nomJoueur: string;
+  ok: boolean = false;
+
+  joueur1: Joueur;
+  joueur2: Joueur;
+
+  isHost: boolean;
+  adversaireAChoisi: boolean = false;
+
+  joueurs: Joueur[];
+
+  nbTours: string='';
+  count = 0;
+
+  rencontre: Rencontre = {
+    tours: [],
+    gagnant: null,
+    joueurs:[],
+    nbTours: parseInt(this.nbTours),
+    scoreJoueur1:0,
+    scoreJoueur2:0,
+  };
+  idRencontre: number;
+  rencontres: Rencontre[];
+
+
   rejoindClick: boolean = false;
   creerClick: boolean = false;
-  joueur: Joueur;
+
+  choixCreerRencontre: boolean = false;
+  choixRejoindre: boolean = false;
+  choixAction: string;
+
+  messageAttente: string
 
   constructor(private joueurService: JoueurService,
-    private jeuService: JeuService) { }
+    private jeuService: JeuService,
+    private tourService: TourService,
+    private rencontreService: RencontreService) { }
 
   ngOnInit() {
-    this.getJoueurs().subscribe(
+    this.getJoueurs(
+    ).subscribe(
       joueurs => {
-        if (joueurs) {
-          this.joueurs = joueurs
-          this.nbConnecte = this.joueurs.length;
-          this.joueurId = this.nbConnecte + 1;
-          this.getJeux().subscribe(
-            jeux => this.jeux = jeux
-          )
-        }
-
+        this.joueurs = joueurs
       }
     );
+    this.getRencontres(
+    ).subscribe(
+      rencontres => {
+        this.rencontres = rencontres
+      }
+    )
+
+  }
+
+  parseInt(val: string) {
+    return parseInt(val);
   }
 
   getJoueur(id: number) {
@@ -69,127 +105,201 @@ export class AppComponent {
     return this.jeuService.createJeu(jeu);
   }
 
-
-  getNomJoueur(id: number) {
-    let j: Joueur = this.joueurs.find(joueur => joueur.idJoueur === id);
-    if (j) return j.nom;
-    else {
-      return "";
-    }
+  createRencontre(rencontre: Rencontre) {
+    return this.rencontreService.createRencontre(rencontre);
   }
 
-  rejoindreJeu(pseudo: string) {
-    let idJoueur: number
-    let joueur: Joueur;
-    this.getJoueurs().subscribe(
-      joueurs => {
-        this.joueurs = joueurs
-        idJoueur = joueurs.length + 1
-        this.joueurId = idJoueur
+  getRencontres() {
+    return this.rencontreService.getRencontres();
+  }
 
-        joueur = {
-          idJoueur: idJoueur,
-          nom: pseudo,
-          score: 0,
-          abandon: false,
-          peutJouer: false,
-          derniereAction: null
-        }
-        let trouve = this.joueurs.find(
-          j => {
-            return j.idJoueur === joueur.idJoueur
-          }
-        );
-        if (!trouve) {
-          this.createJoueur(joueur).subscribe(
-            _cree => {
-              this.joueurs.push(joueur)
-              this.getJeux().subscribe(
-                jeux => {
-                  this.jeux = jeux
-                }
-              )
-              this.rejoindClick = true;
-            }
-          )
-        }
-
+  getTour() {
+    let nom: string;
+    if (this.adversaireAChoisi) {
+      return "Vous pouvez jouer !";
+    } else {
+      if (this.isHost) {
+        nom = this.joueur2.nom
+      } else {
+        nom = this.joueur1.nom
       }
-    )
+      return "En attente que " + nom + " joue son tour..";
+    }
+
   }
 
+  creerRencontre(pseudo: string, nbTours: string) {
+    this.creerClick = true;
+    this.isHost = true;
+    this.joueur1 = {
+      nom: pseudo,
+      abandon: false,
+      derniereAction: null,
+      score: 0
+    }
+    let rencontre: Rencontre = {
+      nbTours: parseInt(nbTours),
+      joueurs: [this.joueur1, this.joueur2],
+      scoreJoueur1: 0,
+      scoreJoueur2: 0,
+      tours: [],
+      gagnant: null
+    }
 
-  choisirJeu(indexJeu: number) {
-    // il faut trouver le idCreateur ( != de idJeu !!)
-    this.getJeux().subscribe(
-      jeux => {
-        this.jeux = jeux;
-        this.getJoueurs().subscribe(
-          joueurs => {
-            if (joueurs.length > 0) {
-              this.joueurs = joueurs;
-              let idJoueur = this.joueurs.length;
-              this.jeux[indexJeu]['idJoueur2'] = idJoueur;
+    this.rencontres.push(rencontre);
 
-              this.updateJeu(this.jeux[indexJeu]).subscribe(
-                jeu => {
-                  this.jeux.push(jeu)
-                  this.wait = false;
-                }
-              );
-            }
-
-
+    this.createRencontre(
+      rencontre
+    ).subscribe(
+      (renc) => {
+        this.rencontreService.getRencontre(
+          renc.id
+        ).subscribe(
+          renc => {
+            this.idRencontre = renc.id
+            this.joueur2 = renc.joueurs[1] // ICI JAI LE JOUEUR 2 DANS LE CLIENT 1
+            alert(this.joueur2.nom + " a rejoint votre jeu !")
+            this.wait = false;
           }
         )
       }
     )
-
-    return this.jeux[indexJeu];
   }
 
-  creerJeu(pseudo: string) {
-    let idJoueur: number;
-    let idAdversaire: number = 0;
-    this.getJoueurs().subscribe(
-      joueurs => {
-        this.joueurs = joueurs
-        idJoueur = joueurs.length + 1;
-        let joueur: Joueur = {
-          nom: pseudo,
-          score: 0,
-          abandon: false,
-          peutJouer: true,
-          derniereAction: null
+  rejoindreRencontre(pseudo: string, id: number) {
+    this.idRencontre = id;
+    this.joueur2 = {
+      nom: pseudo,
+      abandon: false,
+      derniereAction: null,
+      score: 0
+    }
+    this.createJoueur(this.joueur2).subscribe(
+      joueur => {
+        this.joueur2 = joueur
+        this.rencontreService.getRencontre(id).subscribe(
+          renc => {
+            renc.joueurs[1] = this.joueur2
+            this.rencontreService.updateRencontre(renc).subscribe(
+              rencon => {
+                this.joueur1 = rencon.joueurs[0] // ICI JAI LE JOUEUR 1 DANS LE CLIENT 2
+                this.wait = false;
+
+              }
+            )
+          }
+        )
+      }
+    );
+
+  }
+
+
+  action(action: string) {
+    this.rencontreService.getRencontre(this.idRencontre).subscribe(
+      renc => {
+        let tour: Tour = {
+          "id": renc.id * 100 + renc.tours.length + 1,
+
         }
-        this.createJoueur(joueur).subscribe(
-          j => {
-            this.joueurs.push(j)
-            this.creerClick = true;
-            this.wait = true;
-            let jeu: Jeu = {
-              id: idJoueur,
-              idJoueur1: idJoueur,
-              idJoueur2: idAdversaire
+        this.joueur1 = renc.joueurs[0]
+        this.joueur2 = renc.joueurs[1]
+
+        this.rencontre = renc;
+        this.count++;
+
+
+        this.tourService.getTour(tour.id).subscribe(
+          tr => {
+            if (tr) {
+              tour = tr
+              console.log(tr)
             }
-            this.createJeu(jeu).subscribe(
-              jeuRes => {
-                this.getJeu(jeuRes.id).subscribe(
-                  res => {
-                    if (res.idJoueur2) {
-                      this.jeux.push(res)
-                      this.getJoueur(res.idJoueur2).subscribe(
-                        joueur2 => {
-                          alert(joueur2.nom + " a rejoint votre jeu !");
-                          this.wait = false;
-                        }
-                      )
-                    }
+
+            if (this.isHost) {
+
+              tour.actionJoueur1 = action;
+              this.joueur1.derniereAction = tour.actionJoueur1;
+              this.joueurService.updateJoueur(this.joueur1).subscribe()
+
+              // isHost a jouer en premiere
+              if (tour.actionJoueur1 == null || tour.actionJoueur2 == null) {
+                this.tourService.createTour(tour).subscribe(
+                  tourCree => {
+                    //joueur 2 a jouer en deuxieme
+                    this.adversaireAChoisi = true;
+                    this.rencontreService.getRencontre(this.idRencontre).subscribe(
+                      re => {
+                        this.rencontre = re
+                        console.log("joueur2 joue en deuxieme " + JSON.stringify(this.rencontre))
+                        this.joueur2 = this.rencontre.joueurs[1];
+                      }
+                    )
+                  }
+                )
+              } else {
+                // isHost a jouer en 2eme 
+                console.log("joueur 1 a joue")
+                this.adversaireAChoisi = !this.adversaireAChoisi;
+                this.tourService.updateTour(tour).subscribe(
+                  tr => {
+                    console.log("tour=" + JSON.stringify(tr))
+                    renc.tours.push(tr);
+                    this.rencontre = renc
+                    console.log("rencontre = " + JSON.stringify(this.rencontre))
+                    this.rencontreService.updateRencontre(renc).subscribe(
+                      re => {
+                        this.rencontre = re
+                      }
+                    )
 
                   }
                 )
+
               }
-            )
+
+            }
+            else {
+
+              tour.actionJoueur2 = action;
+              this.joueur2.derniereAction = tour.actionJoueur2;
+              this.joueurService.updateJoueur(this.joueur2).subscribe()
+
+              //joueur2 a jouer en premier
+              if (tour.actionJoueur1 == null || tour.actionJoueur2 == null) {
+                this.tourService.createTour(tour).subscribe(
+                  tourCree => {
+                    // joueur1 a jouer en 2eme
+                    this.adversaireAChoisi = true;
+                    this.rencontreService.getRencontre(this.idRencontre).subscribe(
+                      re => {
+                        this.rencontre = re
+                        console.log('joueur 2 a joue ' + JSON.stringify(this.rencontre))
+                        this.joueur1 = this.rencontre.joueurs[0];
+                      }
+                    )
+                  }
+                )
+              } else {
+                // joueur 2 a jouer en 2eme
+                this.adversaireAChoisi = !this.adversaireAChoisi;
+                this.tourService.updateTour(tour).subscribe(
+                  ut => {
+                    renc.tours.push(ut);
+                    this.rencontre = renc;
+                    console.log("joueur 2 a joue " + JSON.stringify(this.rencontre))
+                    this.rencontreService.updateRencontre(renc).subscribe(
+                      re => {
+                        this.rencontre = re
+                      }
+                    );
+                  }
+                );
+
+
+              }
+            }
+
           }
         );
       }
@@ -197,18 +307,35 @@ export class AppComponent {
 
   }
 
+  gagnant() {
+    let scoreJ1 = 0;
+    let scoreJ2 = 0;
+    for (let i = 0; i < this.rencontre.tours.length; i++) {
+      scoreJ1 = scoreJ1 + this.rencontre.tours[i].pointsJoueur1;
+      scoreJ2 = scoreJ2 + this.rencontre.tours[i].pointsJoueur2;
+    }
 
-
-  cooperer() {
+    if (scoreJ1 > scoreJ2) {
+      return this.rencontre.joueurs[0].nom + " a gagné"
+    } else if (scoreJ2 > scoreJ1) {
+      return this.rencontre.joueurs[1].nom + " a gagné"
+    } else {
+      return "égalité !"
+    }
 
   }
 
-  getTour() {
-    return "C'est votre tour. Vous pouvez jouez ! "
+  fini() {
+    let b = false;
+    if (this.rencontre && this.rencontre.tours.length === this.parseInt(this.nbTours)) {
+      for (let i = 0; i < this.rencontre.tours.length; i++) {
+        b = this.rencontre.tours[i].actionJoueur1 !== null && this.rencontre.tours[i].actionJoueur2 !== null;
+        console.log(b)
+      }
+      if (b) this.gagnant()
+    }
+    return b;
   }
-
-
-
 
 }
 
